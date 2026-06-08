@@ -1,0 +1,17 @@
+[
+  {"day":"2026-04-23","status":"Posted","paymentCount":2,"totalAmount":4985.44},
+  {"day":"2026-04-25","status":"Posted","paymentCount":1,"totalAmount":1927.43},
+  {"day":"2026-05-04","status":"Posted","paymentCount":1,"totalAmount":300},
+  {"day":"2026-05-23","status":"Posted","paymentCount":1,"totalAmount":1927.43},
+  {"day":"2026-05-25","status":"Posted","paymentCount":1,"totalAmount":963.45},
+  {"day":"2026-05-26","status":"Posted","paymentCount":2,"totalAmount":5475.4},
+  {"day":"2026-06-01","status":"Posted","paymentCount":1,"totalAmount":2008.99},
+  {"day":"2026-06-02","status":"Posted","paymentCount":2,"totalAmount":6658.25},
+  {"day":"2026-06-03","status":"Posted","paymentCount":34,"totalAmount":57856.26},
+  {"day":"2026-06-04","status":"Posted","paymentCount":99,"totalAmount":210259.28},
+  {"day":"2026-06-05","status":"Posted","paymentCount":129,"totalAmount":321227.44},
+  {"day":"2026-06-06","status":"Posted","paymentCount":59,"totalAmount":132831.97},
+  {"day":"2026-06-07","status":"Posted","paymentCount":42,"totalAmount":90908.66},
+  {"day":"2026-06-08","status":"Posted","paymentCount":16,"totalAmount":40786.63},
+  {"day":"2026-06-08","status":"Pending","paymentCount":46,"totalAmount":100385.48}
+]
