@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily Trends — Operations Report</title>
+<style>
+  :root{
+    --bg:#FAFAF7;--panel:#FFFFFF;--ink:#1A1A18;--sub:#6B6B63;--rule:#E4E2DA;
+    --posted:#0F766E;--users:#1D4ED8;--cum:#9333EA;
+    --serif:'Iowan Old Style','Palatino Linotype',Palatino,Georgia,serif;
+    --sans:ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.5}
+  .wrap{max-width:940px;margin:0 auto;padding:30px 26px 60px}
+  .topbar{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:16px}
+  .kicker{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--sub)}
+  h1{font-family:var(--serif);font-size:34px;font-weight:600;margin:4px 0 0;line-height:1.05}
+  .tagline{font-size:13.5px;color:var(--sub);margin-top:6px}
+  .btn{font-family:var(--sans);font-size:13px;padding:8px 16px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:4px;cursor:pointer}
+  .grainbar{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .grainbar .glab{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--sub)}
+  .toggle{display:flex;width:fit-content;border:1px solid var(--ink);border-radius:4px;overflow:hidden}
+  .toggle button{font-family:var(--sans);font-size:13px;padding:7px 16px;border:none;background:transparent;color:var(--ink);cursor:pointer}
+  .toggle button.on{background:var(--ink);color:var(--bg)}
+  .sec-head{margin:30px 0 16px}
+  .sec-kicker{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub)}
+  h2{font-family:var(--serif);font-size:23px;font-weight:600;margin:3px 0 0}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+  .kpi{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:12px 14px}
+  .kpi .lab{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--sub)}
+  .kpi .val{font-family:var(--serif);font-size:26px;font-weight:600;margin-top:4px}
+  .kpi .sub{font-size:11.5px;color:var(--sub);margin-top:2px}
+  .chart{background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:14px 10px 6px}
+  .chart svg{width:100%;height:auto;display:block}
+  .legend{display:flex;gap:18px;font-size:12.5px;color:var(--sub);padding:4px 8px 0}
+  .legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+  .metricbar{display:flex;justify-content:flex-end;margin-bottom:10px}
+  .note{font-size:11.5px;color:var(--sub);margin-top:8px;font-style:italic}
+  .foot{margin-top:30px;font-size:11.5px;color:var(--sub);border-top:1px solid var(--rule);padding-top:12px}
+  @media print{body{background:#fff}.no-print{display:none !important}.chart,.kpi{break-inside:avoid}.wrap{max-width:none;padding:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <div class="kicker">Operations Report</div>
+      <h1>Daily Trends</h1>
+      <div class="tagline">Payments posted and new-user growth</div>
+    </div>
+    <button class="btn no-print" onclick="window.print()">Save as PDF</button>
+  </div>
+
+  <div class="grainbar no-print">
+    <span class="glab">Aggregate by</span>
+    <div class="toggle" id="grain-toggle">
+      <button data-g="day" class="on">Daily</button>
+      <button data-g="week">Weekly</button>
+      <button data-g="month">Monthly</button>
+    </div>
+  </div>
+
+  <div class="sec-head">
+    <div class="sec-kicker">Payments container</div>
+    <h2>Payments Posted <span style="font-weight:400;color:var(--sub);font-size:15px">(by posting date)</span></h2>
+  </div>
+  <div class="kpis" id="pay-kpis"></div>
+  <div class="metricbar no-print">
+    <div class="toggle" id="pay-toggle">
+      <button data-m="count" class="on">Count</button>
+      <button data-m="amount">Dollar amount</button>
+    </div>
+  </div>
+  <div class="chart">
+    <div class="legend">
+      <span><i style="background:var(--posted)"></i><span id="pay-leg">Posted per day</span></span>
+      <span><i style="background:var(--cum)"></i>Cumulative total</span>
+    </div>
+    <div id="pay-chart"></div>
+  </div>
+  <div class="note">Posting runs on business days, so weekend dates show zero and Monday batches run high. Weekly view smooths this.</div>
+
+  <div class="sec-head">
+    <div class="sec-kicker">User container</div>
+    <h2>Users Registered</h2>
+  </div>
+  <div class="kpis" id="usr-kpis"></div>
+  <div class="chart">
+    <div class="legend">
+      <span><i style="background:var(--users)"></i><span id="usr-leg">New users per day</span></span>
+      <span><i style="background:var(--cum)"></i>Cumulative total</span>
+    </div>
+    <div id="usr-chart"></div>
+  </div>
+
+  <div class="foot" id="foot">Loading data…</div>
+</div>
+
+<script>
+const C={posted:"#0F766E",users:"#1D4ED8",cum:"#9333EA",ink:"#1A1A18",sub:"#6B6B63",rule:"#E4E2DA"};
+const MON=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+let payMetric="count",grain="day";
+const DATA_AS_OF="June 9, 2026";  // <-- update this when you commit new JSON
+
+const FALLBACK_PAY=[
+  {day:"2026-05-26",postedCount:2,postedAmount:2890.88},
+  {day:"2026-05-27",postedCount:2,postedAmount:5475.4},
+  {day:"2026-06-02",postedCount:1,postedAmount:2008.99},
+  {day:"2026-06-03",postedCount:2,postedAmount:6658.25},
+  {day:"2026-06-04",postedCount:56,postedAmount:120312.44},
+  {day:"2026-06-05",postedCount:101,postedAmount:207414.92},
+  {day:"2026-06-08",postedCount:222,postedAmount:526142.88},
+  {day:"2026-06-09",postedCount:90,postedAmount:216608.4}
+];
+const FALLBACK_USR=[
+  {day:"2026-04-06",newUsers:1},{day:"2026-04-22",newUsers:1},{day:"2026-04-23",newUsers:2},
+  {day:"2026-04-25",newUsers:1},{day:"2026-05-04",newUsers:1},{day:"2026-05-13",newUsers:1},
+  {day:"2026-06-01",newUsers:7},{day:"2026-06-02",newUsers:14},{day:"2026-06-03",newUsers:179},
+  {day:"2026-06-04",newUsers:268},{day:"2026-06-05",newUsers:212},{day:"2026-06-06",newUsers:111},
+  {day:"2026-06-07",newUsers:81},{day:"2026-06-08",newUsers:160},{day:"2026-06-09",newUsers:94}
+];
+let PAY_DATA=FALLBACK_PAY,USR_DATA=FALLBACK_USR,SRC="built-in sample";
+
+const fmtN=n=>Math.round(n).toLocaleString("en-US");
+const fmtUSD=v=>"$"+Math.round(v).toLocaleString("en-US");
+
+function prepPayDaily(rows){return rows.filter(r=>r.day).map(r=>({day:r.day,postedCount:+r.postedCount||0,postedAmount:+r.postedAmount||0})).sort((a,b)=>a.day<b.day?-1:1);}
+function prepUsersDaily(rows){return rows.filter(r=>r.day).map(r=>({day:r.day,newUsers:+r.newUsers||0})).sort((a,b)=>a.day<b.day?-1:1);}
+function eachDay(first,last,fn){let cur=new Date(first+"T00:00:00Z");const end=new Date(last+"T00:00:00Z");
+  while(cur<=end){fn(cur.toISOString().slice(0,10));cur.setUTCDate(cur.getUTCDate()+1);}}
+function fillPay(d){if(!d.length)return d;const map={};d.forEach(r=>map[r.day]=r);const out=[];
+  eachDay(d[0].day,d[d.length-1].day,k=>out.push(map[k]||{day:k,postedCount:0,postedAmount:0}));return out;}
+function fillUsr(d){if(!d.length)return d;const map={};d.forEach(r=>map[r.day]=r);const out=[];
+  eachDay(d[0].day,d[d.length-1].day,k=>out.push(map[k]||{day:k,newUsers:0}));return out;}
+function weekStart(isoDay){const d=new Date(isoDay+"T00:00:00Z");d.setUTCDate(d.getUTCDate()-((d.getUTCDay()+6)%7));return d.toISOString().slice(0,10);}
+function bucketKey(day){if(grain==="week")return weekStart(day);if(grain==="month")return day.slice(0,7);return day;}
+function rollupPay(daily){if(grain==="day")return daily;const m={};
+  daily.forEach(r=>{const k=bucketKey(r.day);m[k]=m[k]||{day:k,postedCount:0,postedAmount:0};
+    m[k].postedCount+=r.postedCount;m[k].postedAmount+=r.postedAmount;});
+  return Object.values(m).sort((a,b)=>a.day<b.day?-1:1);}
+function rollupUsr(daily){if(grain==="day")return daily.map(r=>({day:r.day,newUsers:r.newUsers}));const m={};
+  daily.forEach(r=>{const k=bucketKey(r.day);m[k]=m[k]||{day:k,newUsers:0};m[k].newUsers+=r.newUsers;});
+  return Object.values(m).sort((a,b)=>a.day<b.day?-1:1);}
+function fmtX(lab){if(grain==="month"){const p=lab.split("-");return MON[(+p[1])-1]+" "+p[0].slice(2);}return lab.slice(5);}
+function axisMax(max){if(!isFinite(max)||max<=0)return 4;const exp=Math.floor(Math.log10(max)),base=Math.pow(10,exp),f=max/base;
+  let nf;if(f<=1)nf=1;else if(f<=1.5)nf=1.5;else if(f<=2)nf=2;else if(f<=3)nf=3;else if(f<=5)nf=5;else nf=10;return nf*base;}
+function svgChart(labels,series,fmtL,fmtR){
+  const W=860,H=320,mL=64,mT=14,mB=36;const hasR=series.some(s=>s.axis==="right");const mR=hasR?68:18;
+  const pW=W-mL-mR,pH=H-mT-mB,n=labels.length;let lMax=0,rMax=0;
+  series.forEach(s=>s.vals.forEach(v=>{if(s.axis==="right"){if(v>rMax)rMax=v;}else if(v>lMax)lMax=v;}));
+  const lAx=axisMax(lMax),rAx=axisMax(rMax);
+  const xAt=i=>n<=1?mL+pW/2:mL+(pW*i)/(n-1);const yL=v=>mT+pH-(pH*v)/lAx;const yR=v=>mT+pH-(pH*v)/rAx;
+  let g="";
+  for(let k=0;k<=4;k++){const y=mT+pH-(pH*k)/4;
+    g+=`<line x1="${mL}" y1="${y.toFixed(1)}" x2="${W-mR}" y2="${y.toFixed(1)}" stroke="${C.rule}" stroke-width="1"/>`;
+    g+=`<text x="${mL-8}" y="${(y+4).toFixed(1)}" text-anchor="end" font-size="11" fill="${C.sub}" font-family="ui-sans-serif,system-ui">${fmtL(lAx*k/4)}</text>`;
+    if(hasR)g+=`<text x="${W-mR+8}" y="${(y+4).toFixed(1)}" text-anchor="start" font-size="11" fill="${C.cum}" font-family="ui-sans-serif,system-ui">${fmtR(rAx*k/4)}</text>`;}
+  const step=Math.max(1,Math.ceil(n/12));
+  labels.forEach((lab,i)=>{if(i%step!==0 && i!==n-1)return;
+    g+=`<text x="${xAt(i).toFixed(1)}" y="${H-12}" text-anchor="middle" font-size="11" fill="${C.sub}" font-family="ui-sans-serif,system-ui">${fmtX(lab)}</text>`;});
+  series.forEach(s=>{const yf=s.axis==="right"?yR:yL;const pts=s.vals.map((v,i)=>`${xAt(i).toFixed(1)},${yf(v).toFixed(1)}`).join(" ");
+    if(s.fill && n>1)g+=`<polyline points="${mL},${(mT+pH)} ${pts} ${(xAt(n-1)).toFixed(1)},${(mT+pH)}" fill="${s.color}" fill-opacity="0.10" stroke="none"/>`;
+    g+=`<polyline points="${pts}" fill="none" stroke="${s.color}" stroke-width="2.4" ${s.dashed?'stroke-dasharray="5 3"':''} stroke-linejoin="round" stroke-linecap="round"/>`;
+    if(n<=40)s.vals.forEach((v,i)=>{g+=`<circle cx="${xAt(i).toFixed(1)}" cy="${yf(v).toFixed(1)}" r="2.4" fill="${s.color}"><title>${labels[i]}: ${(s.axis==="right"?fmtR:fmtL)(v)}</title></circle>`;});});
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="trend chart">${g}</svg>`;}
+function kpi(lab,val,sub,color){return `<div class="kpi"><div class="lab">${lab}</div><div class="val"${color?` style="color:${color}"`:''}>${val}</div><div class="sub">${sub}</div></div>`;}
+function periodLabel(){return grain==="day"?"Days":grain==="week"?"Weeks":"Months";}
+function render(){
+  const d=rollupPay(fillPay(prepPayDaily(PAY_DATA)));
+  const totC=d.reduce((s,r)=>s+r.postedCount,0),totA=d.reduce((s,r)=>s+r.postedAmount,0);
+  const act=d.filter(r=>r.postedCount>0);
+  const peak=act.reduce((m,r)=>r.postedCount>m.postedCount?r:m,{postedCount:0,day:"—"});
+  const range=d.length?`${d[0].day} → ${d[d.length-1].day}`:"—";
+  const perLab=grain==="day"?"day":grain==="week"?"week":"month";
+  const perPhrase=grain==="day"?"per day":grain==="week"?"per week":"per month";
+  document.getElementById("pay-leg").textContent="Posted "+perPhrase;
+  document.getElementById("usr-leg").textContent="New users "+perPhrase;
+  document.getElementById("pay-kpis").innerHTML=
+    kpi("Posted",fmtN(totC),fmtUSD(totA)+" total",C.posted)+
+    kpi("Peak "+perLab,fmtN(peak.postedCount),peak.day,C.posted)+
+    kpi("Avg / active "+perLab,act.length?(totC/act.length).toFixed(1):"0","payments")+
+    kpi(periodLabel(),fmtN(d.length),range);
+  const isC=payMetric==="count";
+  let run=0;const cum=d.map(r=>run+=(isC?r.postedCount:r.postedAmount));
+  const ps=[{color:C.posted,fill:true,vals:d.map(r=>isC?r.postedCount:r.postedAmount),axis:"left"},
+            {color:C.cum,vals:cum,axis:"right"}];
+  document.getElementById("pay-chart").innerHTML=svgChart(d.map(r=>r.day),ps,isC?fmtN:fmtUSD,isC?fmtN:fmtUSD);
+
+  const u=rollupUsr(fillUsr(prepUsersDaily(USR_DATA)));
+  const total=u.reduce((s,r)=>s+r.newUsers,0);const active=u.filter(r=>r.newUsers>0);
+  const upeak=active.reduce((m,r)=>r.newUsers>m.newUsers?r:m,{newUsers:0,day:"—"});
+  const uavg=active.length?total/active.length:0;const urange=u.length?`${u[0].day} → ${u[u.length-1].day}`:"—";
+  document.getElementById("usr-kpis").innerHTML=
+    kpi("Registrations",fmtN(total),"in range",C.users)+kpi("Peak "+perLab,fmtN(upeak.newUsers),upeak.day,C.users)+
+    kpi("Avg / active "+perLab,uavg.toFixed(1),"registrations")+kpi(periodLabel(),fmtN(u.length),urange);
+  let run2=0;const ucum=u.map(r=>run2+=r.newUsers);
+  const us=[{color:C.users,fill:true,vals:u.map(r=>r.newUsers),axis:"left"},{color:C.cum,vals:ucum,axis:"right"}];
+  document.getElementById("usr-chart").innerHTML=svgChart(u.map(r=>r.day),us,fmtN,fmtN);
+
+  document.getElementById("foot").textContent="Data as of "+DATA_AS_OF+" · source: "+SRC;
+}
+document.querySelectorAll("#grain-toggle button").forEach(b=>{b.onclick=()=>{grain=b.dataset.g;
+  document.querySelectorAll("#grain-toggle button").forEach(x=>x.classList.toggle("on",x===b));render();};});
+document.querySelectorAll("#pay-toggle button").forEach(b=>{b.onclick=()=>{payMetric=b.dataset.m;
+  document.querySelectorAll("#pay-toggle button").forEach(x=>x.classList.toggle("on",x===b));render();};});
+async function load(name){try{const r=await fetch(name,{cache:"no-store"});if(!r.ok)throw 0;const j=await r.json();return Array.isArray(j)?j:null;}catch(e){return null;}}
+(async function init(){
+  const p=await load("payments.json"),u=await load("users.json");
+  if(p){PAY_DATA=p;SRC="payments.json + users.json";}
+  if(u)USR_DATA=u;
+  if(!p&&!u)SRC="built-in sample (JSON files not found)";
+  render();
+})();
+</script>
+</body>
+</html>
